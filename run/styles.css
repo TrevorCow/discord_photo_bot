@@ -1,0 +1,77 @@
+:root {
+    --gallery_spacing: 8px;
+}
+
+body {
+    background-color: #2d2d2d;
+}
+
+p {
+    text-align: center;
+    color: #9a9a9a;
+}
+
+.gallery_image_content { /**/
+    position: relative;
+}
+
+.gallery_hover_text { /*The hover text box*/
+    position: absolute;
+    bottom: 0;
+    width: inherit;
+    background: #000;
+    color: #b70f0f;
+    margin-bottom: 5px;
+    font-family: sans-serif;
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0s, opacity .5s linear
+}
+
+.gallery_image_content:hover {
+    cursor: pointer
+}
+
+.gallery_image_content:hover .gallery_hover_text {
+    padding: 8px 15px;
+    visibility: visible;
+    opacity: .7
+}
+
+
+#gallery img {
+    width: 100% !important;
+    height: auto !important;
+
+    margin-bottom: var(--gallery_spacing); /* to match column gap */
+}
+
+#gallery {
+    line-height: 0;
+    column-count: 5; /* split it into 5 columns */
+    column-gap: var(--gallery_spacing); /* give it a gap between columns */
+}
+
+@media (max-width: 1200px) {
+    #gallery {
+        column-count: 4;
+    }
+}
+
+@media (max-width: 1000px) {
+    #gallery {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 800px) {
+    #gallery {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 400px) {
+    #gallery {
+        column-count: 1;
+    }
+}
