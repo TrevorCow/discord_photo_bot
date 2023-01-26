@@ -107,6 +107,7 @@ fn get_content_type(path: &Path) -> &'static str {
         "html" => "text/html; charset=utf8",
         "txt" => "text/plain; charset=utf8",
         "css" => "text/css; charset=utf8",
+        "js" => "text/javascript; charset=utf8",
         _ => "text/plain; charset=utf8",
     }
 }

@@ -1,84 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="styles.css">
-    <title>Pictures</title>
+    <title>Masonry Layout con CSS Grid</title>
 </head>
-<body>
+<body onload="resizeAll()">
+<h1>Masonry Gallery</h1>
 
-<h1>Page Title</h1>
-
-<div id="gallery">
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245166303809567/53F1BD5E-DD7E-4834-975A-5189F411789E_1_105_c.jpeg">
-        <div class="gallery_hover_text">Image Text 1</div>
+<h1>Gallery 1</h1>
+<div class="gallery">
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,care" alt=""></div>
     </div>
-
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245166303809567/53F1BD5E-DD7E-4834-975A-5189F411789E_1_105_c.jpeg">
-        <div class="gallery_hover_text">Image Text 2</div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,studied" alt=""></div>
     </div>
-
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245166303809567/53F1BD5E-DD7E-4834-975A-5189F411789E_1_105_c.jpeg">
-        <div class="gallery_hover_text">Image Text 3</div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,substance" alt=""></div>
     </div>
-
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245166303809567/53F1BD5E-DD7E-4834-975A-5189F411789E_1_105_c.jpeg">
-        <div class="gallery_hover_text">Image Text 4</div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,choose" alt=""></div>
     </div>
-
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245166303809567/53F1BD5E-DD7E-4834-975A-5189F411789E_1_105_c.jpeg">
-        <div class="gallery_hover_text">Image Text 5</div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,past" alt=""></div>
     </div>
-
-
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245088046485554/B403164E-7341-467E-9257-371047842C1C_1_105_c.jpeg"
-             alt="8888888888">
-        <div></div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,lamp" alt=""></div>
     </div>
-
-    <div class="gallery_image_content">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066245044111163454/59F9C2CC-4BCB-47FA-A92D-D320D342373D_1_105_c.jpeg"
-             alt="This is 7, there was no title for 6">
-        <div></div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,yet" alt=""></div>
     </div>
-
-    <a target="_blank" href="">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066244948174843985/A4F2F1E5-E332-4CDD-9366-5A287CFD6548_1_105_c.jpeg"
-             alt="">
-    </a>
-
-    <a target="_blank" href="">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066244901114761256/BEACB08B-0D82-478F-A9CE-49E5E013481C_1_105_c.jpeg"
-             alt="5">
-    </a>
-
-    <a target="_blank" href="">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066244844839772200/B1297AF8-EA2F-4C23-88D8-F1C9AF043DF9_1_105_c.jpeg"
-             alt="four 4 four!">
-    </a>
-
-    <a target="_blank" href="">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066244796810788864/D8A3DC0A-45CC-433E-AF8D-DC42903DA12E_1_105_c.jpeg"
-             alt="photo 3">
-    </a>
-
-    <a target="_blank" href="">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066120645726973992/CE14F327-06F8-47C5-860D-8776BA7415DA_1_105_c.jpeg"
-             alt="this is title 2">
-    </a>
-
-    <a target="_blank" href="">
-        <img src="https://media.discordapp.net/attachments/1066115155060084809/1066120584754372608/3B14DC60-9495-44EA-A427-2233E73AD2E8_1_105_c.jpeg"
-             alt="This is the title to picture 1">
-    </a>
-
+    <h1>Test Break</h1>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,eight" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,crew" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,event" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,instrument" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,practical" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,pass" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,bigger" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,number" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,feature" alt=""></div>
+    </div>
 </div>
-<p>this is after</p>
+
+<h1>Gallery 2</h1>
+<div class="gallery">
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,care" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,studied" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,studied" alt=""></div>
+    </div>
+    <div class="gallery-item">
+        <div class="content"><img src="https://source.unsplash.com/random/?tech,studied" alt=""></div>
+    </div>
+</div>
+
+<h1>What happens here</h1>
+
+<script>
+    const getVal = function (elem, style) {
+        return parseInt(window.getComputedStyle(elem).getPropertyValue(style));
+    };
+    const getHeight = function (item) {
+        return item.querySelector('.content').getBoundingClientRect().height;
+    };
+
+    const galleries = document.querySelectorAll('.gallery');
+    galleries.forEach(gallery => {
+        gallery.querySelectorAll('.gallery-item').forEach(function (item) {
+            item.style.opacity = "0";
+            item.addEventListener('click', function () {
+                item.classList.toggle('full');
+            });
+        });
+    });
+
+
+    const resizeAll = function () {
+        galleries.forEach(gallery => {
+            const altura = getVal(gallery, 'grid-auto-rows');
+            const gap = getVal(gallery, 'grid-row-gap');
+            gallery.querySelectorAll('.gallery-item').forEach(function (item) {
+                item.style.gridRowEnd = "span " + Math.ceil((getHeight(item) + gap) / (altura + gap));
+            });
+            gallery.querySelectorAll('.gallery-item').forEach(function (item) {
+                item.style.opacity = "1";
+            });
+        });
+    };
+    window.addEventListener('resize', resizeAll);
+
+
+</script>
 
 </body>
 </html>

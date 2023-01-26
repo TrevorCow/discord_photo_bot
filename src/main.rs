@@ -1,20 +1,26 @@
-use std::{env, thread};
+use std::{env, fs, panic, thread};
 use std::collections::HashMap;
-use std::io::Cursor;
-use std::sync::{Arc, Mutex};
-use handlebars::{Handlebars, RenderError};
-use std::string;
-use ascii::IntoAsciiString;
-use once_cell::sync::Lazy;
-use serde::{Serialize, Serializer};
 
-use serenity::{async_trait, Client};
+
+use std::ops::{Add, Deref};
+
+use std::sync::{Arc, Mutex};
+
+
+use handlebars::{Handlebars, RenderError};
+use once_cell::sync::Lazy;
+use serde::{ser, Serialize, Serializer};
+use serde::de::Unexpected::Str;
+use serenity::{async_trait, Client, FutureExt};
+use serenity::futures::future::join_all;
+use serenity::json::prelude::to_value;
 use serenity::model::channel::{ChannelType, Message};
 use serenity::model::gateway::Ready;
 use serenity::model::id::ChannelId;
 use serenity::model::prelude::GuildChannel;
 use serenity::prelude::{Context, EventHandler, GatewayIntents, TypeMapKey};
 use tiny_http::{Header, Response, Server, StatusCode};
+
 use crate::webserver::PhotoWebserver;
 
 mod webserver;
@@ -39,66 +45,96 @@ static HANDLEBARS: Lazy<Handlebars> = Lazy::new(|| {
 #[derive(Serialize)]
 struct PhotoInfo {
     url: String,
-    author: String,
-    picture_title: Option<String>,
+    picture_description: Option<String>,
 }
 
 #[derive(Serialize)]
-struct HtmlPageData {
-    pictures: String,
+struct GalleryInfo {
+    title: String,
+    picture_infos: Vec<PhotoInfo>,
+}
+
+#[derive(Serialize)]
+struct PageInfo {
+    page_title: String,
+    page_build_info: String,
+    galleries: Vec<GalleryInfo>,
 }
 
 
 struct Handler;
 
 impl Handler {
-    async fn test(&self, ctx: &Context, messages: &[Message]) {
-        let mut photo_infos: Vec<PhotoInfo> = Vec::new();
-        messages.iter().for_each(|message| {
-            let mut message_photo_infos = message.attachments.iter()
-                .filter(|attachment| { // Filter the attachments that are images
-                    attachment.content_type.is_some() && attachment.content_type.as_ref().unwrap().starts_with("image")
+    async fn collect_channel_photos_and_author(&self, ctx: &Context, channel: &GuildChannel) -> (String, Vec<PhotoInfo>) {
+        let messages = channel.messages(&ctx.http, |message| message).await.unwrap();
+        let photo_infos = messages
+            .iter().rev()
+            .flat_map(|message| {
+                message.attachments.iter()
+                    .filter(|attachment| { // Filter the attachments that are images
+                        attachment.content_type.is_some() && attachment.content_type.as_ref().unwrap().starts_with("image")
+                    })
+                    .map(|attachment| {
+                        let url = attachment.proxy_url.clone();
+                        let picture_description =
+                            if message.content.is_empty() {
+                                None
+                            } else {
+                                Some(message.content.clone())
+                            };
+                        PhotoInfo {
+                            url,
+                            picture_description,
+                        }
+                    }).collect::<Vec<PhotoInfo>>()
+            }).collect::<Vec<PhotoInfo>>();
+
+        let first_message_discord_author = messages.last().unwrap().author.clone();
+        let author_text = format!("{}#{:0>4}", first_message_discord_author.name, first_message_discord_author.discriminator);
+
+        (author_text, photo_infos)
+    }
+
+    async fn build_gallery_webpage(&self, ctx: &Context, channels: Vec<&GuildChannel>) {
+        let galleries = join_all(channels.iter().map(|channel| async {
+            let (discord_author_text, picture_infos) = self.collect_channel_photos_and_author(ctx, channel).await;
+
+            let author_name_channel = channel.name.clone()
+                .split('-')
+                .map(|s| {
+                    let mut chars = s.chars();
+                    let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
+                    string += chars.as_str();
+
+                    string
                 })
-                .map(|attachment| {
-                    let url = attachment.proxy_url.clone();
-                    let mut author = message.author.name.clone();
-                    author.push_str(message.author.discriminator.to_string().as_str());
-                    let picture_title = if message.content.is_empty() {
-                        None
-                    } else {
-                        Some(message.content.clone())
-                    };
-                    PhotoInfo {
-                        url,
-                        author,
-                        picture_title,
-                    }
-                }).collect();
+                .collect::<Vec<String>>()
+                .join(" ");
 
-            photo_infos.append(&mut message_photo_infos);
-        });
+            let title = format!("{} ({})", author_name_channel, discord_author_text);
 
-        let mut picture_templates = String::new();
-        photo_infos.iter().for_each(|photo_info| {
-            let render_result = HANDLEBARS.render("picture_template", &photo_info);
-            match render_result {
-                Ok(rendered_result) => { picture_templates.push_str(&rendered_result) }
-                Err(err) => { eprintln!("{}", err); }
+            GalleryInfo {
+                title,
+                picture_infos,
             }
-        });
+        })).await;
 
-        let built_html = HANDLEBARS.render("html_template", &HtmlPageData { pictures: picture_templates }).unwrap();
+        let page_info = PageInfo {
+            page_title: "".to_string(),
+            page_build_info: "".to_string(),
+            galleries,
+        };
+
+        let built_html = HANDLEBARS.render("html_template", &page_info).unwrap();
+
+        fs::write("last_built_page.html", &built_html).expect("Unable to write file");
 
         {
             let data = ctx.data.read().await;
             let ampw = data.get::<ArcMutexPhotoWebserver>().unwrap();
             ampw.lock().unwrap().update_serving_page_src(built_html);
         }
-        // let mut last = LAST_BUILT_WEBPAGE.lock().unwrap();
-        // let _ = last.replace(built_html);
     }
-
-    async fn get_connected_guilds() {}
 }
 
 #[async_trait]
@@ -113,18 +149,42 @@ impl EventHandler for Handler {
             if let Err(err) = msg.delete(&ctx.http).await {
                 eprintln!("Error deleting message: {:?}", err);
             }
-            let messages = msg.channel_id.messages(&ctx.http, |b| {
-                b
-            }).await.unwrap();
-            let _ = messages.iter().for_each(|message| {
-                eprintln!("Debug: message_data: {:?}", message);
-            });
 
-            self.test(&ctx, &messages).await;
-        }
+            let current_guild = ctx.http.get_guild(msg.guild_id.unwrap().0).await.unwrap();
+            let guild_channels = current_guild.channels(&ctx.http).await.unwrap();
 
+            let message_channel_id = msg.channel_id;
+            let message_channel = match msg.channel(&ctx.http).await.unwrap().guild() {
+                Some(guild_channel) => guild_channel,
+                None => {
+                    message_channel_id.say(&ctx.http, "This command must be run in a channel that belongs to a guild! (No private messages)").await.unwrap();
+                    return;
+                }
+            };
+            let message_parent_category = match message_channel.parent_id {
+                Some(message_parent_id) => {
+                    message_parent_id.to_channel(&ctx.http).await.unwrap().category().unwrap()
+                }
+                None => {
+                    message_channel_id.say(&ctx.http, "This command must be run in a channel that belongs to a category!").await.unwrap();
+                    return;
+                }
+            };
+            let category_children = guild_channels.iter()
+                .filter(|entry| {
+                    match entry.1.parent_id {
+                        Some(parent_id) => { parent_id == message_parent_category.id }
+                        None => { false }
+                    }
+                })
+                .map(|entry| entry.1)
+                .collect::<Vec<&GuildChannel>>();
 
-        if msg.content == "!ping" {
+            println!("Called from channel `{}` which is in category `{}`. Category has channels: {:?}", message_channel.name, message_parent_category.name, category_children);
+
+            self.build_gallery_webpage(&ctx, category_children).await;
+            // for cat_child in category_children {}
+        } else if msg.content == "!ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
                 println!("Error sending message: {:?}", why);
             }
@@ -152,24 +212,6 @@ impl EventHandler for Handler {
             };
             println!("\tConnected to guild: {}", guild_name);
         }
-
-        {
-            let test_guild_id = guild_ids[0];
-            let test_guild = ctx.http.get_guild(test_guild_id).await.unwrap();
-            let tg_channels = test_guild.channels(&ctx.http).await.unwrap();
-            let guild_channel_categories = tg_channels.iter().filter(|entry| {
-                entry.1.kind == ChannelType::Category
-            }).map(|entry| {
-                entry.1
-            }).collect::<Vec<&GuildChannel>>();
-
-
-            guild_channel_categories.iter().for_each(|gc| {
-                println!("Test channels: {}", gc.name);
-            });
-        }
-
-        // Start the webserver once the discord bot has connected
     }
 }
 
@@ -183,6 +225,7 @@ impl TypeMapKey for ArcMutexPhotoWebserver {
 async fn main() {
     let webserver = Arc::new(Mutex::new(PhotoWebserver::new()));
     {
+        // Start the webserver
         let ws_lock = webserver.lock().unwrap();
         ws_lock.spawn_server(8080);
     }

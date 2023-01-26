@@ -2,17 +2,27 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="gallery.js"></script>
     <title>Pictures</title>
 </head>
-<body>
+<body onload="init()">
+<span class="tooltip">Content 1</span>
+<h1>{{page_title}}</h1>
+<h2>{{page_build_info}}</h2>
 
-<h1>Photos!</h1>
-
-<div id="gallery">
-    {{{pictures}}}
+{{#each galleries}}
+<h1>{{title}}</h1>
+<div class="gallery">
+    {{#each picture_infos}}
+    <div class="gallery-item">
+        <div class="content" data-disc="{{picture_description}}">
+            <img src="{{url}}" alt="">
+        </div>
+    </div>
+    {{/each}}
 </div>
 
-<p>this is after</p>
+{{/each}}
 
 </body>
 </html>
