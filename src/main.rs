@@ -1,12 +1,11 @@
 use std::{env, fs};
 use std::sync::{Arc, Mutex};
-use ascii::AsciiChar::c;
 use chrono::Local;
 
 use handlebars::Handlebars;
 use once_cell::sync::Lazy;
 use serde::Serialize;
-use serenity::{async_trait, Client, FutureExt};
+use serenity::{async_trait, Client};
 use serenity::futures::future::join_all;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
@@ -88,28 +87,40 @@ impl Handler {
             .map(|entry| entry.1)
             .collect::<Vec<&GuildChannel>>();
 
-        let galleries = join_all(category_children.iter().map(|channel| async {
-            let (discord_author_text, picture_infos) = self.collect_channel_photos_and_author(ctx, channel).await;
+        let maybe_galleries = join_all(
+            category_children.iter()
+                .map(|channel| async {
+                    let (discord_author_text, picture_infos) = match self.collect_channel_photos_and_author(ctx, channel).await {
+                        Some(s) => { s }
+                        None => {
+                            return None;
+                        }
+                    };
 
-            let author_name_channel = channel.name.clone()
-                .split('-')
-                .map(|s| {
-                    let mut chars = s.chars();
-                    let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
-                    string += chars.as_str();
+                    let author_name_channel = channel.name.clone()
+                        .split('-')
+                        .map(|s| {
+                            let mut chars = s.chars();
+                            let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
+                            string += chars.as_str();
 
-                    string
+                            string
+                        })
+                        .collect::<Vec<String>>()
+                        .join(" ");
+
+                    let title = format!("{} ({})", author_name_channel, discord_author_text);
+
+                    Some(
+                        GalleryInfo {
+                            title,
+                            picture_infos,
+                        }
+                    )
                 })
-                .collect::<Vec<String>>()
-                .join(" ");
+        ).await;
 
-            let title = format!("{} ({})", author_name_channel, discord_author_text);
-
-            GalleryInfo {
-                title,
-                picture_infos,
-            }
-        })).await;
+        let galleries = maybe_galleries.into_iter().flatten().collect();
 
         let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now());
 
@@ -134,8 +145,11 @@ impl Handler {
         }
     }
 
-    async fn collect_channel_photos_and_author(&self, ctx: &Context, channel: &GuildChannel) -> (String, Vec<PhotoInfo>) {
+    async fn collect_channel_photos_and_author(&self, ctx: &Context, channel: &GuildChannel) -> Option<(String, Vec<PhotoInfo>)> {
         let messages = channel.messages(&ctx.http, |message| message).await.unwrap();
+        if messages.is_empty() {
+            return None;
+        }
         let photo_infos = messages
             .iter().rev()
             .flat_map(|message| {
@@ -162,17 +176,12 @@ impl Handler {
         // let author_text = format!("{}#{:0>4}", first_message_discord_author.name, first_message_discord_author.discriminator);
         let author_text = first_message_discord_author.tag();
 
-        (author_text, photo_infos)
+        Some((author_text, photo_infos))
     }
 }
 
 #[async_trait]
 impl EventHandler for Handler {
-    // Set a handler for the `message` event - so that whenever a new message
-    // is received - the closure (or function) passed will be called.
-    //
-    // Event handlers are dispatched through a threadpool, and so multiple
-    // events can be dispatched simultaneously.
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content == "/collectphotos" {
             if let Err(err) = msg.delete(&ctx.http).await {
@@ -180,8 +189,10 @@ impl EventHandler for Handler {
             }
 
             self.cmd_collect_photos(&ctx, msg).await;
-
-            // for cat_child in category_children {}
+        } else if msg.content == "/leave" {
+            if let Err(why) = ctx.http.leave_guild(msg.guild_id.unwrap().0).await {
+                println!("Error leaving guild: {:?}", why);
+            }
         } else if msg.content == "/ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
                 println!("Error sending message: {:?}", why);
@@ -189,12 +200,6 @@ impl EventHandler for Handler {
         }
     }
 
-    // Set a handler to be called on the `ready` event. This is called when a
-    // shard is booted, and a READY payload is sent by Discord. This payload
-    // contains data like the current user's guild Ids, current user data,
-    // private channels, and more.
-    //
-    // In this case, just print what the current user's username is.
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected ot {} guilds!", ready.user.name, ready.guilds.len());
 
