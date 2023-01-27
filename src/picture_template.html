@@ -3,15 +3,14 @@
 <head>
     <link rel="stylesheet" type="text/css" href="styles.css">
     <script src="gallery.js"></script>
-    <title>Pictures</title>
+    <title>{{page_title}}</title>
 </head>
 <body onload="init()">
 <span class="tooltip">Content 1</span>
 <h1>{{page_title}}</h1>
-<h2>{{page_build_info}}</h2>
 
 {{#each galleries}}
-<h1>{{title}}</h1>
+<h2>{{title}}</h2>
 <div class="gallery">
     {{#each picture_infos}}
     <div class="gallery-item">
@@ -24,5 +23,8 @@
 
 {{/each}}
 
+<hr>
+<h3>{{page_build_info}}</h3>
+<h3>Website created in rust by Trevor Rosenstrom | View the source code <a href="//github.com/trevorcow/discord_photo_bot" target="_blank">here</a>.</h3>
 </body>
 </html>

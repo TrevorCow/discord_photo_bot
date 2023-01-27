@@ -1,25 +1,17 @@
-use std::{env, fs, panic, thread};
-use std::collections::HashMap;
-
-
-use std::ops::{Add, Deref};
-
+use std::{env, fs};
 use std::sync::{Arc, Mutex};
+use ascii::AsciiChar::c;
+use chrono::Local;
 
-
-use handlebars::{Handlebars, RenderError};
+use handlebars::Handlebars;
 use once_cell::sync::Lazy;
-use serde::{ser, Serialize, Serializer};
-use serde::de::Unexpected::Str;
+use serde::Serialize;
 use serenity::{async_trait, Client, FutureExt};
 use serenity::futures::future::join_all;
-use serenity::json::prelude::to_value;
-use serenity::model::channel::{ChannelType, Message};
+use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
-use serenity::model::id::ChannelId;
 use serenity::model::prelude::GuildChannel;
 use serenity::prelude::{Context, EventHandler, GatewayIntents, TypeMapKey};
-use tiny_http::{Header, Response, Server, StatusCode};
 
 use crate::webserver::PhotoWebserver;
 
@@ -65,6 +57,83 @@ struct PageInfo {
 struct Handler;
 
 impl Handler {
+    async fn cmd_collect_photos(&self, ctx: &Context, msg: Message) {
+        let current_guild = ctx.http.get_guild(msg.guild_id.unwrap().0).await.unwrap();
+        let guild_channels = current_guild.channels(&ctx.http).await.unwrap();
+
+        let message_channel_id = msg.channel_id;
+        let message_channel = match msg.channel(&ctx.http).await.unwrap().guild() {
+            Some(guild_channel) => guild_channel,
+            None => {
+                message_channel_id.say(&ctx.http, "This command must be run in a channel that belongs to a guild! (No private messages)").await.unwrap();
+                return;
+            }
+        };
+        let message_parent_category = match message_channel.parent_id {
+            Some(message_parent_id) => {
+                message_parent_id.to_channel(&ctx.http).await.unwrap().category().unwrap()
+            }
+            None => {
+                message_channel_id.say(&ctx.http, "This command must be run in a channel that belongs to a category!").await.unwrap();
+                return;
+            }
+        };
+        let category_children = guild_channels.iter()
+            .filter(|entry| {
+                match entry.1.parent_id {
+                    Some(parent_id) => { parent_id == message_parent_category.id }
+                    None => { false }
+                }
+            })
+            .map(|entry| entry.1)
+            .collect::<Vec<&GuildChannel>>();
+
+        let galleries = join_all(category_children.iter().map(|channel| async {
+            let (discord_author_text, picture_infos) = self.collect_channel_photos_and_author(ctx, channel).await;
+
+            let author_name_channel = channel.name.clone()
+                .split('-')
+                .map(|s| {
+                    let mut chars = s.chars();
+                    let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
+                    string += chars.as_str();
+
+                    string
+                })
+                .collect::<Vec<String>>()
+                .join(" ");
+
+            let title = format!("{} ({})", author_name_channel, discord_author_text);
+
+            GalleryInfo {
+                title,
+                picture_infos,
+            }
+        })).await;
+
+        let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now());
+
+        let page_info = PageInfo {
+            page_title: format!("{} Photo Galleries", current_guild.name),
+            page_build_info,
+            galleries,
+        };
+
+        self.build_gallery_webpage(ctx, page_info).await;
+    }
+
+    async fn build_gallery_webpage(&self, ctx: &Context, page_info: PageInfo) {
+        let built_html = HANDLEBARS.render("html_template", &page_info).unwrap();
+
+        fs::write("last_built_page.html", &built_html).expect("Unable to write file");
+
+        {
+            let data = ctx.data.read().await;
+            let ampw = data.get::<ArcMutexPhotoWebserver>().unwrap();
+            ampw.lock().unwrap().update_serving_page_src(built_html);
+        }
+    }
+
     async fn collect_channel_photos_and_author(&self, ctx: &Context, channel: &GuildChannel) -> (String, Vec<PhotoInfo>) {
         let messages = channel.messages(&ctx.http, |message| message).await.unwrap();
         let photo_infos = messages
@@ -90,50 +159,10 @@ impl Handler {
             }).collect::<Vec<PhotoInfo>>();
 
         let first_message_discord_author = messages.last().unwrap().author.clone();
-        let author_text = format!("{}#{:0>4}", first_message_discord_author.name, first_message_discord_author.discriminator);
+        // let author_text = format!("{}#{:0>4}", first_message_discord_author.name, first_message_discord_author.discriminator);
+        let author_text = first_message_discord_author.tag();
 
         (author_text, photo_infos)
-    }
-
-    async fn build_gallery_webpage(&self, ctx: &Context, channels: Vec<&GuildChannel>) {
-        let galleries = join_all(channels.iter().map(|channel| async {
-            let (discord_author_text, picture_infos) = self.collect_channel_photos_and_author(ctx, channel).await;
-
-            let author_name_channel = channel.name.clone()
-                .split('-')
-                .map(|s| {
-                    let mut chars = s.chars();
-                    let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
-                    string += chars.as_str();
-
-                    string
-                })
-                .collect::<Vec<String>>()
-                .join(" ");
-
-            let title = format!("{} ({})", author_name_channel, discord_author_text);
-
-            GalleryInfo {
-                title,
-                picture_infos,
-            }
-        })).await;
-
-        let page_info = PageInfo {
-            page_title: "".to_string(),
-            page_build_info: "".to_string(),
-            galleries,
-        };
-
-        let built_html = HANDLEBARS.render("html_template", &page_info).unwrap();
-
-        fs::write("last_built_page.html", &built_html).expect("Unable to write file");
-
-        {
-            let data = ctx.data.read().await;
-            let ampw = data.get::<ArcMutexPhotoWebserver>().unwrap();
-            ampw.lock().unwrap().update_serving_page_src(built_html);
-        }
     }
 }
 
@@ -150,41 +179,10 @@ impl EventHandler for Handler {
                 eprintln!("Error deleting message: {:?}", err);
             }
 
-            let current_guild = ctx.http.get_guild(msg.guild_id.unwrap().0).await.unwrap();
-            let guild_channels = current_guild.channels(&ctx.http).await.unwrap();
+            self.cmd_collect_photos(&ctx, msg).await;
 
-            let message_channel_id = msg.channel_id;
-            let message_channel = match msg.channel(&ctx.http).await.unwrap().guild() {
-                Some(guild_channel) => guild_channel,
-                None => {
-                    message_channel_id.say(&ctx.http, "This command must be run in a channel that belongs to a guild! (No private messages)").await.unwrap();
-                    return;
-                }
-            };
-            let message_parent_category = match message_channel.parent_id {
-                Some(message_parent_id) => {
-                    message_parent_id.to_channel(&ctx.http).await.unwrap().category().unwrap()
-                }
-                None => {
-                    message_channel_id.say(&ctx.http, "This command must be run in a channel that belongs to a category!").await.unwrap();
-                    return;
-                }
-            };
-            let category_children = guild_channels.iter()
-                .filter(|entry| {
-                    match entry.1.parent_id {
-                        Some(parent_id) => { parent_id == message_parent_category.id }
-                        None => { false }
-                    }
-                })
-                .map(|entry| entry.1)
-                .collect::<Vec<&GuildChannel>>();
-
-            println!("Called from channel `{}` which is in category `{}`. Category has channels: {:?}", message_channel.name, message_parent_category.name, category_children);
-
-            self.build_gallery_webpage(&ctx, category_children).await;
             // for cat_child in category_children {}
-        } else if msg.content == "!ping" {
+        } else if msg.content == "/ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
                 println!("Error sending message: {:?}", why);
             }

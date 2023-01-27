@@ -51,7 +51,9 @@ function setupToolTips() {
 
     const thingsThatNeedToolTip = document.querySelectorAll(".content");
     thingsThatNeedToolTip.forEach(contentObject => {
-        contentObject.addEventListener("mousemove", onmm, false);
+        if (contentObject.dataset.disc.trim() !== "") {
+            contentObject.addEventListener("mousemove", onmm, false);
+        }
         contentObject.addEventListener("mouseleave", e => {
             tooltip.style.display = "none"
         }, false);

@@ -1,11 +1,11 @@
-use std::io::{Cursor, Empty, Read};
+use std::io::{Cursor};
 use std::sync::{Arc, Mutex};
-use std::{io, thread};
+use std::{thread};
 use std::fs::File;
 use std::path::Path;
 use ascii::AsciiString;
-use serde::de::Unexpected::Str;
-use tiny_http::{Header, Request, Response, ResponseBox, Server, StatusCode};
+
+use tiny_http::{Header, Response, Server, StatusCode};
 
 pub struct PhotoWebserver {
     serving_page_src: Arc<Mutex<Option<String>>>,
