@@ -9,14 +9,10 @@ description = "Discord photo bot"
 [dependencies]
 once_cell = { version = "1.17.0" }
 handlebars = "5.0.0-beta.1"
-serenity = { version = "0.11.5", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+serenity = { version = "0.11.5", default-features = false, features = ["builder", "client", "gateway", "http", "model", "utils", "rustls_backend"] }
 tokio = { version = "1.24.2", features = ["macros", "rt-multi-thread"] }
 tiny_http = "0.12.0"
 serde = "1.0.152"
 ascii = "1.1.0"
 chrono = "0.4.23"
-
-[package.metadata.bundle]
-name = "DiscordPhotoBot"
-identifier = "com.trevorcow.discordphotobot"
-resources = ["run"]
+futures = "0.3.25"
