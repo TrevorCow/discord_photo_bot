@@ -3,6 +3,8 @@ function init() {
     setupToolTips();
 }
 
+
+
 function setupGalleryResizer() {
     const getVal = function (elem, style) {
         return parseInt(window.getComputedStyle(elem).getPropertyValue(style));
@@ -16,7 +18,7 @@ function setupGalleryResizer() {
         gallery.querySelectorAll('.gallery-item').forEach(function (item) {
             item.style.opacity = "0"; // Hide all the pictures while they are loading
             item.addEventListener('click', function () {
-                item.classList.toggle('full');
+                //TODO: Open images in bigger view
             });
         });
     });
@@ -32,12 +34,12 @@ function setupGalleryResizer() {
             });
         });
     };
-    window.addEventListener('resize', resizeAll);
-    resizeAll();
+    // window.addEventListener('resize', resizeAll);
+    // resizeAll();
 }
 
 function setupToolTips() {
-    const tooltip = document.querySelector(".tooltip");
+    const tooltip = document.querySelector("#tooltip");
 
     function onmm(e) {
         let parentContent = e.currentTarget;

@@ -10,10 +10,10 @@ use serenity::model::guild::Guild;
 use serenity::prelude::GatewayIntents;
 use futures::StreamExt;
 use serenity::Error::Other;
-use crate::discord_util::{parse_gallery_info_from_channel};
-use crate::website_builder::{build_website, GalleryInfo, PageInfo};
+use crate::util::{parse_gallery_info_from_channel};
+use crate::website_builder::{build_website, clean_website_folder, GalleryInfo, PageInfo};
 
-mod discord_util;
+mod util;
 mod website_builder;
 
 const BOT_GATEWAY_INTENTS: u64 = GatewayIntents::GUILD_MESSAGES.bits() |
@@ -25,6 +25,7 @@ struct BotEventHandler;
 impl BotEventHandler {
     async fn collect_photos(&self, ctx: &Context, msg: Message) {
         let collect_photos_result = async {
+            clean_website_folder();
             let current_guild = ctx.http.get_guild(msg.guild_id.unwrap().0).await?;
             let guild_channels = current_guild.channels(&ctx.http).await?;
 
@@ -65,8 +66,8 @@ impl BotEventHandler {
                 .collect();
 
 
-            let page_title = format!("{} Photo Galleries", current_guild.name);
-            let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now());
+            let page_title = format!("{} Photo Galleries", current_guild.name).into_boxed_str();
+            let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now()).into_boxed_str();
 
             let page_info = PageInfo {
                 page_title,

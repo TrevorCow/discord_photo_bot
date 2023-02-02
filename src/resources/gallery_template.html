@@ -6,7 +6,7 @@
     <title>{{page_title}}</title>
 </head>
 <body onload="init()">
-<span class="tooltip">Content 1</span>
+<span id="tooltip">Content 1</span>
 <h1>{{page_title}}</h1>
 
 {{#each galleries}}
@@ -14,8 +14,8 @@
 <div class="gallery">
     {{#each picture_infos}}
     <div class="gallery-item">
-        <div class="content" data-disc="{{picture_description}}">
-            <img src="{{url}}" alt="">
+        <div class="content" data-disc="{{picture_description}}" data-fullurl="{{url}}">
+            <img src="{{thumbnail_url}}" alt="">
         </div>
     </div>
     {{/each}}
