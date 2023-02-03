@@ -1,41 +1,66 @@
-function init() {
-    setupGalleryResizer();
+document.addEventListener('readystatechange', () => {
+    if (document.readyState === "interactive") {
+        onDOMFinished();
+    }
+});
+
+function onDOMFinished() {
+    setupGallery();
     setupToolTips();
 }
 
+function showPreview(gimp) {
+    const previewDiv = document.querySelector("#preview");
+    if (previewDiv.children.length === 0) {
+        let previewImg = new Image();
+        previewImg.src = gimp.dataset.fullurl;
+        previewDiv.appendChild(previewImg);
+        previewDiv.style.display = "block";
+    } else {
+        previewDiv.style.display = "none";
+        previewDiv.innerHTML = "";
+    }
 
+}
 
-function setupGalleryResizer() {
-    const getVal = function (elem, style) {
-        return parseInt(window.getComputedStyle(elem).getPropertyValue(style));
-    };
-    const getHeight = function (item) {
-        return item.querySelector('.content').getBoundingClientRect().height;
-    };
+function setupGallery() {
+    const allGalleryImages = document.querySelectorAll(".gallery img");
 
-    const galleries = document.querySelectorAll('.gallery');
-    galleries.forEach(gallery => {
-        gallery.querySelectorAll('.gallery-item').forEach(function (item) {
-            item.style.opacity = "0"; // Hide all the pictures while they are loading
-            item.addEventListener('click', function () {
-                //TODO: Open images in bigger view
-            });
+    const onGalleryImageLoaded = function (gimg) {
+        gimg.addEventListener("click", function (event) {
+            showPreview(gimg);
         });
+        resizeGridItem(gimg);
+    }
+
+    allGalleryImages.forEach(gimg => {
+        if (gimg.complete) {
+            onGalleryImageLoaded(gimg);
+        } else {
+            gimg.addEventListener("load", function (event) {
+                onGalleryImageLoaded(event.target);
+            });
+            gimg.addEventListener('error', function (err) {
+                console.log(err);
+            });
+        }
+
     });
 
+    window.addEventListener("resize", function (event) {
+        allGalleryImages.forEach(resizeGridItem);
+    });
+}
 
-    const resizeAll = function () {
-        galleries.forEach(gallery => {
-            const altura = getVal(gallery, 'grid-auto-rows');
-            const gap = getVal(gallery, 'grid-row-gap');
-            gallery.querySelectorAll('.gallery-item').forEach(function (item) {
-                item.style.gridRowEnd = "span " + Math.ceil((getHeight(item) + gap) / (altura + gap));
-                item.style.opacity = "1"; // Once they are loaded show them again
-            });
-        });
-    };
-    // window.addEventListener('resize', resizeAll);
-    // resizeAll();
+function resizeGridItem(item) {
+    let gallery = item.parentElement;
+    console.assert(gallery.classList.contains("gallery"))
+    let computedGalleryStyle = window.getComputedStyle(gallery);
+    let rowHeight = parseInt(computedGalleryStyle.getPropertyValue('grid-auto-rows'));
+    let rowGap = parseInt(computedGalleryStyle.getPropertyValue('grid-row-gap'));
+    let rowSpan = Math.ceil((item.getBoundingClientRect().height + rowGap) / (rowHeight + rowGap));
+    item.style.gridRowEnd = "span " + rowSpan;
+    item.style.display = "inline";
 }
 
 function setupToolTips() {
@@ -51,7 +76,7 @@ function setupToolTips() {
         tooltip.innerText = parentContent.dataset.disc;
     }
 
-    const thingsThatNeedToolTip = document.querySelectorAll(".content");
+    const thingsThatNeedToolTip = document.querySelectorAll(".gallery img");
     thingsThatNeedToolTip.forEach(contentObject => {
         if (contentObject.dataset.disc.trim() !== "") {
             contentObject.addEventListener("mousemove", onmm, false);

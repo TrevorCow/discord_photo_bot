@@ -1,4 +1,5 @@
 use std::env;
+use std::sync::{Arc};
 use chrono::Local;
 use handlebars::{Handlebars, Output};
 use once_cell::sync::Lazy;
@@ -7,9 +8,11 @@ use serenity::client::{Context, EventHandler};
 use serenity::model::channel::{GuildChannel, Message};
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Guild;
-use serenity::prelude::GatewayIntents;
-use futures::StreamExt;
+use serenity::prelude::{GatewayIntents, TypeMapKey};
+use futures::{StreamExt, TryFutureExt};
+use serenity::client::bridge::gateway::ShardManager;
 use serenity::Error::Other;
+use tokio::sync::Mutex;
 use crate::util::{parse_gallery_info_from_channel};
 use crate::website_builder::{build_website, clean_website_folder, GalleryInfo, PageInfo};
 
@@ -19,6 +22,12 @@ mod website_builder;
 const BOT_GATEWAY_INTENTS: u64 = GatewayIntents::GUILD_MESSAGES.bits() |
     GatewayIntents::MESSAGE_CONTENT.bits() |
     GatewayIntents::DIRECT_MESSAGES.bits();
+
+pub struct ShardManagerContainer;
+
+impl TypeMapKey for ShardManagerContainer {
+    type Value = Arc<Mutex<ShardManager>>;
+}
 
 struct BotEventHandler;
 
@@ -97,6 +106,11 @@ impl EventHandler for BotEventHandler {
                 eprintln!("Error deleting message: {:?}", err);
             }
             self.collect_photos(&ctx, msg).await;
+            {
+                let data = ctx.data.read().await;
+                let shard_manager = data.get::<ShardManagerContainer>().unwrap();
+                shard_manager.lock().await.shutdown_all().await;
+            }
         } else if msg.content == "/leave" {
             if let Err(why) = ctx.http.leave_guild(msg.guild_id.unwrap().0).await {
                 println!("Error leaving guild: {:?}", why);
@@ -134,6 +148,11 @@ async fn main() {
         .event_handler(BotEventHandler)
         .await
         .expect("Error creating client");
+
+    {
+        let mut data = client.data.write().await;
+        data.insert::<ShardManagerContainer>(client.shard_manager.clone());
+    }
 
     if let Err(err) = client.start().await {
         println!("Client error: {:?}", err);

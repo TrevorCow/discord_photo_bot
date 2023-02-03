@@ -5,7 +5,8 @@
     <script src="gallery.js"></script>
     <title>{{page_title}}</title>
 </head>
-<body onload="init()">
+<body>
+<div id="preview" onclick="showPreview(null)"></div>
 <span id="tooltip">Content 1</span>
 <h1>{{page_title}}</h1>
 
@@ -13,11 +14,7 @@
 <h2>{{title}}</h2>
 <div class="gallery">
     {{#each picture_infos}}
-    <div class="gallery-item">
-        <div class="content" data-disc="{{picture_description}}" data-fullurl="{{url}}">
-            <img src="{{thumbnail_url}}" alt="">
-        </div>
-    </div>
+    <img data-disc="{{picture_description}}" data-fullurl="{{url}}" src="{{thumbnail_url}}" alt="">
     {{/each}}
 </div>
 
@@ -25,6 +22,7 @@
 
 <hr>
 <h3>{{page_build_info}}</h3>
-<h3>Website generated using rust by Trevor Rosenstrom | View the source code <a href="//github.com/trevorcow/discord_photo_bot" target="_blank">here</a>.</h3>
+<h3>Website generated using rust by Trevor Rosenstrom | View the source code <a
+        href="//github.com/trevorcow/discord_photo_bot" target="_blank">here</a>.</h3>
 </body>
 </html>

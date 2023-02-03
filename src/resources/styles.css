@@ -39,38 +39,17 @@ body {
     grid-gap: 10px;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     grid-auto-rows: 10px;
-    align-items: stretch;
 }
 
 .gallery img {
-    max-width: 100%;
-    box-shadow: 0 0 16px #333;
+    width: 100%;
+    align-self: center;
+    justify-self: center;
+    transition: all .2s ease-in-out;
 }
 
 .gallery img:hover {
-    box-shadow: 0 0 32px #333;
-}
-
-.gallery .img {
-    transition: all 0.5s ease;
-    cursor: pointer;
-    margin: 0;
-}
-
-.gallery .img:hover {
     transform: scale(1.025);
-}
-
-@media (max-width: 600px) {
-    .gallery {
-        grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
-    }
-}
-
-@media (max-width: 400px) {
-    .gallery {
-        grid-template-columns: repeat(auto-fill, minmax(50%, 1fr));
-    }
 }
 
 #tooltip {
@@ -82,4 +61,24 @@ body {
     overflow: hidden;
     white-space: nowrap;
     z-index: 100;
+}
+
+#preview {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: #33333399;
+    z-index: 10;
+}
+
+#preview img {
+    margin: auto;
+    display: block;
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
 }
