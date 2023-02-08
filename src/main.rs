@@ -1,20 +1,22 @@
 use std::env;
+use std::fmt::Display;
+use std::io::Stdout;
+use std::process::{Command, exit, Stdio};
 use std::sync::{Arc};
 use chrono::Local;
-use handlebars::{Handlebars, Output};
-use once_cell::sync::Lazy;
-use serenity::{async_trait, Client, Error};
+
+use serenity::{async_trait, Client};
 use serenity::client::{Context, EventHandler};
 use serenity::model::channel::{GuildChannel, Message};
 use serenity::model::gateway::Ready;
 use serenity::model::guild::Guild;
 use serenity::prelude::{GatewayIntents, TypeMapKey};
-use futures::{StreamExt, TryFutureExt};
+use futures::{StreamExt};
 use serenity::client::bridge::gateway::ShardManager;
 use serenity::Error::Other;
 use tokio::sync::Mutex;
 use crate::util::{parse_gallery_info_from_channel};
-use crate::website_builder::{build_website, clean_website_folder, GalleryInfo, PageInfo};
+use crate::website_builder::{build_website, clean_website_folder, PageBuildInfo, PageInfo};
 
 mod util;
 mod website_builder;
@@ -34,7 +36,6 @@ struct BotEventHandler;
 impl BotEventHandler {
     async fn collect_photos(&self, ctx: &Context, msg: Message) {
         let collect_photos_result = async {
-            clean_website_folder();
             let current_guild = ctx.http.get_guild(msg.guild_id.unwrap().0).await?;
             let guild_channels = current_guild.channels(&ctx.http).await?;
 
@@ -76,7 +77,13 @@ impl BotEventHandler {
 
 
             let page_title = format!("{} Photo Galleries", current_guild.name).into_boxed_str();
-            let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now()).into_boxed_str();
+            let page_build_info = PageBuildInfo {
+                guild_built_from: current_guild.name.into_boxed_str(),
+                channel_built_from: message_channel.name.into_boxed_str(),
+                user_built_by: msg.author.tag().into_boxed_str(),
+                built_time: Local::now().to_string().into_boxed_str(),
+            };
+            // let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now()).into_boxed_str();
 
             let page_info = PageInfo {
                 page_title,
@@ -103,21 +110,16 @@ impl EventHandler for BotEventHandler {
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content == "/collectphotos" {
             if let Err(err) = msg.delete(&ctx.http).await {
-                eprintln!("Error deleting message: {:?}", err);
+                eprintln!("Error deleting message: {err:?}");
             }
             self.collect_photos(&ctx, msg).await;
-            {
-                let data = ctx.data.read().await;
-                let shard_manager = data.get::<ShardManagerContainer>().unwrap();
-                shard_manager.lock().await.shutdown_all().await;
-            }
         } else if msg.content == "/leave" {
             if let Err(why) = ctx.http.leave_guild(msg.guild_id.unwrap().0).await {
-                println!("Error leaving guild: {:?}", why);
+                println!("Error leaving guild: {why:?}");
             }
         } else if msg.content == "/ping" {
             if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-                println!("Error sending message: {:?}", why);
+                println!("Error sending message: {why:?}");
             }
         }
     }
@@ -155,6 +157,6 @@ async fn main() {
     }
 
     if let Err(err) = client.start().await {
-        println!("Client error: {:?}", err);
+        println!("Client error: {err:?}");
     }
 }

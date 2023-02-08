@@ -11,11 +11,17 @@ once_cell = { version = "1.17.0" }
 handlebars = "5.0.0-beta.1"
 serenity = { version = "0.11.5", default-features = false, features = ["builder", "client", "gateway", "http", "model", "utils", "rustls_backend"] }
 tokio = { version = "1.24.2", features = ["macros", "rt-multi-thread"] }
-tiny_http = "0.12.0"
 serde = "1.0.152"
 ascii = "1.1.0"
 chrono = "0.4.23"
 futures = "0.3.25"
-reqwest = { version = "0.11.14", features = ["blocking"] }
+reqwest = { version = "0.11.14", features = ["blocking"]}
 url = "2.3.1"
 image = "0.24.5"
+
+[patch.crates-io]
+ring = { git = "https://github.com/awakecoding/ring", branch = "0.16.20_alpha" }
+
+[package.metadata.bundle]
+name = "Discord Photo Bot"
+identifier = "com.trevorcow.discord_photo_bot"

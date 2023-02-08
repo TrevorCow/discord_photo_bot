@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="gallery.js"></script>
+    <link href="/resources/styles.css" rel="stylesheet" type="text/css">
+    <script src="/resources/gallery.js"></script>
     <title>{{page_title}}</title>
 </head>
 <body>
@@ -14,14 +14,17 @@
 <h2>{{title}}</h2>
 <div class="gallery">
     {{#each picture_infos}}
-    <img data-disc="{{picture_description}}" data-fullurl="{{url}}" src="{{thumbnail_url}}" alt="">
+    <img data-disc="{{picture_description}}" data-fullurl="{{url}}" src="/{{thumbnail_url}}" alt="">
     {{/each}}
 </div>
 
 {{/each}}
 
 <hr>
-<h3>{{page_build_info}}</h3>
+{{#with page_build_info}}
+<h3>Page build from guild/channel `{{guild_built_from}}/{{channel_built_from}}` by `{{user_built_by}}` on
+    {{built_time}}</h3>
+{{/with}}
 <h3>Website generated using rust by Trevor Rosenstrom | View the source code <a
         href="//github.com/trevorcow/discord_photo_bot" target="_blank">here</a>.</h3>
 </body>

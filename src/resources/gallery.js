@@ -24,21 +24,29 @@ function showPreview(gimp) {
 }
 
 function setupGallery() {
+    const allGalleries = document.querySelectorAll(".gallery");
     const allGalleryImages = document.querySelectorAll(".gallery img");
 
+    const resizeAllGalleries = function () {
+        allGalleries.forEach(gallery => {
+            resizeGalleryItems(gallery)
+        });
+    }
+
     const onGalleryImageLoaded = function (gimg) {
-        gimg.addEventListener("click", function (event) {
+        gimg.style.display = "inline";
+        gimg.addEventListener("click", function (_event) {
             showPreview(gimg);
         });
-        resizeGridItem(gimg);
+        resizeAllGalleries();
     }
 
     allGalleryImages.forEach(gimg => {
         if (gimg.complete) {
             onGalleryImageLoaded(gimg);
         } else {
-            gimg.addEventListener("load", function (event) {
-                onGalleryImageLoaded(event.target);
+            gimg.addEventListener("load", function (_event) {
+                onGalleryImageLoaded(gimg);
             });
             gimg.addEventListener('error', function (err) {
                 console.log(err);
@@ -47,20 +55,22 @@ function setupGallery() {
 
     });
 
-    window.addEventListener("resize", function (event) {
-        allGalleryImages.forEach(resizeGridItem);
+    window.addEventListener("resize", function (_event) {
+        resizeAllGalleries();
     });
 }
 
-function resizeGridItem(item) {
-    let gallery = item.parentElement;
-    console.assert(gallery.classList.contains("gallery"))
-    let computedGalleryStyle = window.getComputedStyle(gallery);
-    let rowHeight = parseInt(computedGalleryStyle.getPropertyValue('grid-auto-rows'));
-    let rowGap = parseInt(computedGalleryStyle.getPropertyValue('grid-row-gap'));
-    let rowSpan = Math.ceil((item.getBoundingClientRect().height + rowGap) / (rowHeight + rowGap));
-    item.style.gridRowEnd = "span " + rowSpan;
-    item.style.display = "inline";
+function resizeGalleryItems(gallery) {
+    let children = gallery.querySelectorAll("img");
+
+    children.forEach(child => {
+        console.assert(gallery.classList.contains("gallery"))
+        let computedGalleryStyle = window.getComputedStyle(gallery);
+        let rowHeight = parseInt(computedGalleryStyle.getPropertyValue('grid-auto-rows'));
+        let rowGap = parseInt(computedGalleryStyle.getPropertyValue('grid-row-gap'));
+        let rowSpan = Math.ceil((child.getBoundingClientRect().height + rowGap) / (rowHeight + rowGap));
+        child.style.gridRowEnd = "span " + rowSpan;
+    });
 }
 
 function setupToolTips() {
@@ -81,7 +91,7 @@ function setupToolTips() {
         if (contentObject.dataset.disc.trim() !== "") {
             contentObject.addEventListener("mousemove", onmm, false);
         }
-        contentObject.addEventListener("mouseleave", e => {
+        contentObject.addEventListener("mouseleave", _e => {
             tooltip.style.display = "none"
         }, false);
     });

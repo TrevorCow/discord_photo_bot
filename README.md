@@ -1,28 +1,40 @@
-# Discord Bot and Web Server
+# Photo Gallery Building Discord Bot
 
-This project is a Discord bot and web server built in Rust. It was created as a project for my photography class and as a
+This project is a Discord bot built in Rust. It was created as a project for my photography class and as a
 way to practice the Rust programming language.
 
 ## Features
 
-- The bot allows users to interact with the web server by sending commands and receiving responses.
-- The web server displays galleries of pictures from the class discord.
+- The bot allows users to build a image gallery website by sending commands.
+- The bot will build a static website that can be hosted by any basic webserver. (Includes a super simple python webserver)
+- Downloads and scales images into local cache for faster page loading.
 
 ## Getting Started
 
 To run this project, you will need to have Rust and Cargo installed on your machine. You will also need to create a
 Discord bot and get its API token.
 
-1. Clone the repository:
+1. Invite your bot to your Discord server. 
+   1. The discord bot expects your server to be set up like my photography class. (See example below)
+
+2. Clone the repository:
    ```git clone https://github.com/trevorcow/discord_photo_bot```
 
-2. Set the following environment variables:
+3. Set the following environment variables:
    ```DISCORD_TOKEN=YOUR_DISCORD_BOT_TOKEN```
 
-3. Start the discord bot and server:
-   ```cargo run```
+4. Start the discord bot run:
+   ```cargo run --release```
 
-4. Invite the bot to your Discord server and use ```/collectphotos```, it has to be set up like our photography discord server to work write.
+5. You should now see your discord bot online, you can type ```/collectphotos``` in any channel that belongs to a channel category and it will build the website files.
+
+## Discord server setup example
+
+In order for this bot to correctly build websites, it need the server to be set up similar to my photography class.
+
+Note that the names do not matter, and the command can be run from any of `assignment-1, person-1, person-2, or person-3` but I recommend running it from the main assignemt channel.
+
+![Example Discord Setup](example_setup.png)
 
 ## Built With
 
@@ -30,8 +42,9 @@ Discord bot and get its API token.
 - [Cargo](https://doc.rust-lang.org/cargo/) - The package manager for Rust
 - Main libraries (crates)
     - [serenity](https://docs.rs/serenity/) - For the discord bot
-    - [tiny_http](https://docs.rs/tiny_http/) - For the webserver
     - [handlebars](https://docs.rs/handlebars/) - For dynamically building the webpages
+    - [reqwest](https://docs.rs/reqwest/) - For downloading the images for thumbnails
+    - [image](https://docs.rs/image/) - For compressing and resizing the thumbnail images
 
 ## Contributing
 

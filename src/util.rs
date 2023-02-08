@@ -1,9 +1,9 @@
-use std::fs::File;
-use std::path::Path;
-use std::{fs, thread};
+
+
+
 use serenity::client::Context;
-use serenity::model::channel::{ChannelCategory, GuildChannel, Message};
-use url::Url;
+use serenity::model::channel::{GuildChannel, Message};
+
 use crate::website_builder::{GalleryInfo, PhotoInfo, save_thumbnail};
 
 pub fn parse_photo_infos_from_message(message: Message) -> Vec<PhotoInfo> {
@@ -56,7 +56,7 @@ pub async fn parse_gallery_info_from_channel(ctx: &Context, channel: &GuildChann
         .collect::<Vec<String>>()
         .join(" ");
 
-    let title = format!("{} ({})", author_name_channel, author_text).into_boxed_str();
+    let title = format!("{author_name_channel} ({author_text})").into_boxed_str();
 
     Some(
         GalleryInfo {

@@ -141,12 +141,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "chunked_transfer"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cca491388666e04d7248af3f60f0c40cfb0991c72205595d7c396e3510207d1a"
-
-[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -322,7 +316,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serenity",
- "tiny_http",
  "tokio",
  "url",
 ]
@@ -386,7 +379,7 @@ dependencies = [
  "futures-sink",
  "nanorand",
  "pin-project",
- "spin 0.9.4",
+ "spin",
 ]
 
 [[package]]
@@ -1251,15 +1244,13 @@ dependencies = [
 [[package]]
 name = "ring"
 version = "0.16.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3053cf52e236a3ed746dfc745aa9cacf1b791d846bdaf412f60a8d7d6e17c8fc"
+source = "git+https://github.com/awakecoding/ring?branch=0.16.20_alpha#ec78aff5b5c4734957522f092590e0b58a3161cf"
 dependencies = [
  "cc",
  "libc",
  "once_cell",
- "spin 0.5.2",
+ "spin",
  "untrusted",
- "web-sys",
  "winapi",
 ]
 
@@ -1480,12 +1471,6 @@ dependencies = [
 
 [[package]]
 name = "spin"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
-
-[[package]]
-name = "spin"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f6002a767bff9e83f8eeecf883ecb8011875a21ae8da43bffb817a57e78cc09"
@@ -1603,18 +1588,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d967f99f534ca7e495c575c62638eebc2898a8c84c119b89e250477bc4ba16b2"
 dependencies = [
  "time-core",
-]
-
-[[package]]
-name = "tiny_http"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "389915df6413a2e74fb181895f933386023c71110878cd0825588928e64cdc82"
-dependencies = [
- "ascii",
- "chunked_transfer",
- "httpdate",
- "log",
 ]
 
 [[package]]
