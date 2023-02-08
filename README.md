@@ -32,7 +32,7 @@ Discord bot and get its API token.
 
 In order for this bot to correctly build websites, it need the server to be set up similar to my photography class.
 
-Note that the names do not matter, and the command can be run from any of `assignment-1, person-1, person-2, or person-3` but I recommend running it from the main assignemt channel.
+Note that the names do not matter, and the command can be run from any of `assignment-1, person-1, person-2, or person-3` but I recommend running it from the main assignment channel.
 
 ![Example Discord Setup](example_setup.png)
 

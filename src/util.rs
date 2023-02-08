@@ -1,6 +1,3 @@
-
-
-
 use serenity::client::Context;
 use serenity::model::channel::{GuildChannel, Message};
 
@@ -31,7 +28,7 @@ pub fn parse_photo_infos_from_message(message: Message) -> Vec<PhotoInfo> {
 
 pub async fn parse_gallery_info_from_channel(ctx: &Context, channel: &GuildChannel) -> Option<GalleryInfo> {
     let messages = channel.messages(&ctx.http, |message| message).await.unwrap();
-    if messages.is_empty() {
+    if messages.is_empty() { // If there are no messages return
         return None;
     }
 
@@ -43,6 +40,10 @@ pub async fn parse_gallery_info_from_channel(ctx: &Context, channel: &GuildChann
         .flat_map(|message| {
             parse_photo_infos_from_message(message)
         }).collect::<Vec<PhotoInfo>>();
+
+    if picture_infos.is_empty() { // If there are no messages that have pictures in them return
+        return None;
+    }
 
     let author_name_channel = channel.name
         .split('-')
