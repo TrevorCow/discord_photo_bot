@@ -24,8 +24,7 @@ mod util;
 mod website_builder;
 
 const BOT_GATEWAY_INTENTS: u64 = GatewayIntents::GUILD_MESSAGES.bits() |
-    GatewayIntents::MESSAGE_CONTENT.bits() |
-    GatewayIntents::DIRECT_MESSAGES.bits();
+    GatewayIntents::MESSAGE_CONTENT.bits();
 
 pub struct ShardManagerContainer;
 
