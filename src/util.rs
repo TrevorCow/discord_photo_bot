@@ -1,5 +1,7 @@
+use std::fmt::Display;
 use serenity::client::Context;
 use serenity::model::channel::{GuildChannel, Message};
+use crate::util::ChannelParseMode::{FirstFullLastInitial, FullName};
 
 use crate::website_builder::{GalleryInfo, PhotoInfo, save_thumbnail};
 
@@ -45,17 +47,7 @@ pub async fn parse_gallery_info_from_channel(ctx: &Context, channel: &GuildChann
         return None;
     }
 
-    let author_name_channel = channel.name
-        .split('-')
-        .map(|s| {
-            let mut chars = s.chars();
-            let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
-            string += chars.as_str();
-
-            string
-        })
-        .collect::<Vec<String>>()
-        .join(" ");
+    let author_name_channel = parse_author_name_from_channel_name(&channel.name, FirstFullLastInitial);
 
     let title = format!("{author_name_channel} ({author_text})").into_boxed_str();
 
@@ -65,4 +57,39 @@ pub async fn parse_gallery_info_from_channel(ctx: &Context, channel: &GuildChann
             picture_infos,
         }
     )
+}
+
+pub enum ChannelParseMode {
+    FullName,
+    FirstFullLastInitial,
+}
+
+pub fn parse_author_name_from_channel_name(channel_name: &str, channel_parse_mode: ChannelParseMode) -> String {
+    match channel_parse_mode {
+        FullName => {
+            channel_name
+                .split('-')
+                .map(|s| {
+                    let mut chars = s.chars();
+                    let mut string = String::from(chars.next().unwrap().to_ascii_uppercase());
+                    string += &*chars.as_str().to_ascii_lowercase();
+
+                    string
+                })
+                .collect::<Vec<String>>()
+                .join(" ")
+        }
+        FirstFullLastInitial => {
+            let channel_name_parts = channel_name.split('-').collect::<Vec<&str>>();
+            return if channel_name_parts.len() >= 2 {
+                let mut first_name_chars = channel_name_parts[0].chars();
+                let first_initial = first_name_chars.next().unwrap().to_ascii_uppercase();
+                let rest_of_first_name = first_name_chars.as_str().to_ascii_lowercase();
+                let last_initial = channel_name_parts[1].chars().next().unwrap().to_ascii_uppercase();
+                format!("{}{} {}.", first_initial, rest_of_first_name, last_initial)
+            } else { // If there isn't 2 parts to the name just return the channel name, this means someone didn't name their channel right
+                channel_name.to_owned()
+            };
+        }
+    }
 }

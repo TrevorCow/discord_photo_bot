@@ -1,3 +1,5 @@
+extern crate core;
+
 use std::env;
 use std::fmt::Display;
 use std::io::Stdout;
@@ -83,8 +85,7 @@ impl BotEventHandler {
                 user_built_by: msg.author.tag().into_boxed_str(),
                 built_time: Local::now().to_string().into_boxed_str(),
             };
-            // let page_build_info = format!("Page build from channel `{}` by `{}` on {}", message_channel.name, msg.author.tag(), Local::now()).into_boxed_str();
-
+            
             let page_info = PageInfo {
                 page_title,
                 page_build_info,

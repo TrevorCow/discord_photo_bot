@@ -32,7 +32,8 @@ Discord bot and get its API token.
 
 In order for this bot to correctly build websites, it need the server to be set up similar to my photography class.
 
-Note that the names do not matter, and the command can be run from any of `assignment-1, person-1, person-2, or person-3` but I recommend running it from the main assignment channel.
+Note that the names do not matter, and the command can be run from `assignment-1` or any of the photographers channels, but I recommend running it from the main assignment channel. 
+Gallery names are parsed from the channel names, so `firstname-lastname` will parse into `Firstname Lastname`
 
 ![Example Discord Setup](example_setup.png)
 

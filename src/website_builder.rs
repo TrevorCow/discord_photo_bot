@@ -1,11 +1,13 @@
 use std::{fs, thread};
+use std::io::{BufReader, Cursor};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
+use bytes::Buf;
 use chrono::{DateTime, Local};
 
 use futures::future::join_all;
 use handlebars::Handlebars;
-use image::ImageFormat;
+use image::{EncodableLayout, ImageFormat};
 use image::imageops::FilterType;
 use once_cell::sync::Lazy;
 use serde::Serialize;
@@ -84,8 +86,9 @@ impl ThumbnailDownloadManager {
                     download_runtime.spawn(async move {
                         let thumbnail_image = {
                             let response = reqwest::get(url.clone()).await.unwrap();
-                            let bytes = response.bytes().await.unwrap();
-                            let image = image::load_from_memory(&bytes).unwrap();
+                            let image_bytes = response.bytes().await.unwrap();
+                            let image = image::load_from_memory(&image_bytes).unwrap();
+
                             // image.thumbnail(200, 200)
                             image.resize(250, 250, FilterType::Triangle)
                         };

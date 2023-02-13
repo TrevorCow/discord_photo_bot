@@ -18,7 +18,10 @@ futures = "0.3.25"
 reqwest = { version = "0.11.14", features = ["blocking"]}
 url = "2.3.1"
 image = "0.24.5"
+kamadak-exif = "0.5.5"
+bytes = "1.4.0"
 
+# Needed to fix compiling ring on windows-arm64
 [patch.crates-io]
 ring = { git = "https://github.com/awakecoding/ring", branch = "0.16.20_alpha" }
 
